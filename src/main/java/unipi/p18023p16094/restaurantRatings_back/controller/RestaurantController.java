@@ -11,7 +11,7 @@ import unipi.p18023p16094.restaurantRatings_back.model.User;
 import unipi.p18023p16094.restaurantRatings_back.repository.RestaurantRepository;
 import unipi.p18023p16094.restaurantRatings_back.service.JwtService;
 import unipi.p18023p16094.restaurantRatings_back.service.RestaurantDetailsService;
-import unipi.p18023p16094.restaurantRatings_back.service.RestaurantService;
+//import unipi.p18023p16094.restaurantRatings_back.service.RestaurantService;
 
 import java.util.List;
 import java.util.Optional;
@@ -27,11 +27,11 @@ public class RestaurantController {
     private RestaurantDetailsService restaurantDetailsService;  // Ensure this is correctly autowired
 
 
-    private final RestaurantService restaurantService;
-
-    public RestaurantController(RestaurantService restaurantService) {
-        this.restaurantService = restaurantService;
-    }
+//    private final RestaurantService restaurantService;
+//
+//    public RestaurantController(RestaurantService restaurantService) {
+//        this.restaurantService = restaurantService;
+//    }
 
     // Endpoint to get a list of all restaurants
     @CrossOrigin(origins = "http://localhost:4200")
@@ -79,8 +79,6 @@ public class RestaurantController {
         restaurantRepository.deleteById(id);
         return ResponseEntity.noContent().build();
     }
-
-
 
 
     // Endpoint for creating a restaurant
