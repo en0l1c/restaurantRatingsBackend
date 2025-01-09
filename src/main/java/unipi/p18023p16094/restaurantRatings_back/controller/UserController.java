@@ -56,15 +56,6 @@ public class UserController {
     }
 
 
-
-//    @RequestMapping("/auth/users")
-//    public ResponseEntity<?> getUsers(HttpServletRequest request) {
-//        String token = request.getHeader("Authorization");
-//        System.out.println("Received Authorization Header: " + token);
-//        return ResponseEntity.ok().build();
-//    }
-
-
     @PutMapping("/auth/users/{id}")
     public ResponseEntity<User> updateUser(@PathVariable Long id, @RequestBody User updatedUser) {
         Optional<User> existingUser = userRepository.findById(id);

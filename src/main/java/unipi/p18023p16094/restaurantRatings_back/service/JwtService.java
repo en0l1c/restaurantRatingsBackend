@@ -29,34 +29,11 @@ public class JwtService {
                 .compact();
     }
 
-//    // Overloaded method that can accept user details as a User object
-//    public String createToken(User user) {
-//        return createToken((UserDetails) user);  // Reuse the UserDetails-based method
-//    }
-
     // Method to generate a JWT token with additional claims
     public String generateToken(UserDetails userDetails) {
         Map<String, Object> claims = new HashMap<>();
         return createTokenWithClaims(claims, userDetails.getUsername());
     }
-
-
-//    // Method to generate a JWT token with additional claims (like role)
-//    public String generateToken(UserDetails userDetails) {
-//        Map<String, Object> claims = new HashMap<>();
-//        String username = userDetails.getUsername();
-//
-//        // Extract user role from UserDetails (make sure UserDetails includes role)
-//        String role = ((User) userDetails).getAuthorities().stream()
-//                .findFirst()  // Assuming role is the first authority
-//                .map(authority -> authority.getAuthority())
-//                .orElse("ROLE_USER"); // Default to "ROLE_USER" if no role is found
-//
-//        // Add the role to the claims
-//        claims.put("role", role);  // Store role in the claims
-//
-//        return createTokenWithClaims(claims, username);
-//    }
 
     // Helper method to create token with custom claims
     private String createTokenWithClaims(Map<String, Object> claims, String subject) {
@@ -76,15 +53,6 @@ public class JwtService {
     }
 
 
-    // Extract the username from the token
-//    public String extractUsername(String token) {
-//        return Jwts.parser()
-//                .setSigningKey(secretKey)
-//                .parseClaimsJws(token)
-//                .getBody()
-//                .getSubject();
-//    }
-
     // Check if the token has expired
     private boolean isTokenExpired(String token) {
         return extractExpiration(token).before(new Date());
@@ -100,7 +68,6 @@ public class JwtService {
     }
 
 
-
     // for user controller
     public boolean isTokenValid(String token) {
         try {
@@ -111,19 +78,6 @@ public class JwtService {
             return false;
         }
     }
-//    public String extractUsername(String token) {
-//        try {
-//            // Parse the token
-//            return Jwts.parser()
-//                    .setSigningKey(secretKey)
-//                    .parseClaimsJws(token)
-//                    .getBody()
-//                    .getSubject();
-//        } catch (Exception e) {
-//            System.out.println("Failed to extract username from token: " + e.getMessage());
-//            return null;
-//        }
-//    }
 
     public String extractUsername(String token) {
         try {
