@@ -5,6 +5,8 @@ import org.springframework.stereotype.Service;
 import unipi.p18023p16094.restaurantRatings_back.model.Restaurant;
 import unipi.p18023p16094.restaurantRatings_back.repository.RestaurantRepository;
 
+import java.util.Optional;
+
 @Service
 public class RestaurantDetailsService {
 
@@ -19,5 +21,9 @@ public class RestaurantDetailsService {
     // A method to check if a restaurant already exists
     public boolean existsByName(String name) {
         return restaurantRepository.existsByName(name);  // Assuming this method exists in the repository
+    }
+
+    public Optional<Restaurant> findById(Long id) {
+        return restaurantRepository.findById(id);
     }
 }

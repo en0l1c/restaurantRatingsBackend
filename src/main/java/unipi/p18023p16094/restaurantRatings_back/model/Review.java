@@ -1,6 +1,8 @@
 package unipi.p18023p16094.restaurantRatings_back.model;
 
 import jakarta.persistence.*;
+import unipi.p18023p16094.restaurantRatings_back.repository.RestaurantRepository;
+import unipi.p18023p16094.restaurantRatings_back.repository.UserRepository;
 
 @Entity
 @Table(name = "reviews")
@@ -9,6 +11,7 @@ public class Review {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
 
     @ManyToOne
     @JoinColumn(name = "restaurant_id")
@@ -23,6 +26,8 @@ public class Review {
 
     @Column(name = "rating")
     private float rating;
+
+
 
     // Getters και Setters
     public Restaurant getRestaurant() {
@@ -56,4 +61,23 @@ public class Review {
     public void setRating(float rating) {
         this.rating = rating;
     }
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
 }
+
+
+
+
+
+
+
+
+
+

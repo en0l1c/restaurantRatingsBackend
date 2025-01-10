@@ -4,13 +4,20 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.parameters.P;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 import unipi.p18023p16094.restaurantRatings_back.model.Restaurant;
+import unipi.p18023p16094.restaurantRatings_back.model.Review;
 import unipi.p18023p16094.restaurantRatings_back.model.User;
 import unipi.p18023p16094.restaurantRatings_back.repository.RestaurantRepository;
+import unipi.p18023p16094.restaurantRatings_back.repository.ReviewRepository;
+import unipi.p18023p16094.restaurantRatings_back.repository.UserRepository;
 import unipi.p18023p16094.restaurantRatings_back.service.JwtService;
 import unipi.p18023p16094.restaurantRatings_back.service.RestaurantDetailsService;
+import unipi.p18023p16094.restaurantRatings_back.service.ReviewDetailsService;
 //import unipi.p18023p16094.restaurantRatings_back.service.RestaurantService;
 
 import java.util.List;
@@ -24,7 +31,19 @@ public class RestaurantController {
     private RestaurantRepository restaurantRepository;
 
     @Autowired
-    private RestaurantDetailsService restaurantDetailsService;  // Ensure this is correctly autowired
+    private RestaurantDetailsService restaurantDetailsService;
+
+    @Autowired
+    private ReviewDetailsService reviewDetailsService;
+
+    @Autowired
+    private ReviewRepository reviewRepository;
+
+    @Autowired
+    private UserRepository userRepository;
+
+    @Autowired
+    private JwtService jwtService;
 
 
 //    private final RestaurantService restaurantService;
@@ -87,6 +106,7 @@ public class RestaurantController {
     public ResponseEntity<?> create(@RequestBody Restaurant restaurant) {
         System.out.println("Restaurant creation request received: " + restaurant);
 
+
         // Check if the restaurant already exists by name
         if (restaurantDetailsService.existsByName(restaurant.getName())) {
             return ResponseEntity.badRequest().body("Restaurant with the same name already exists");
@@ -102,6 +122,66 @@ public class RestaurantController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error while creating restaurant: " + e.getMessage());
         }
     }
+
+    // post a new review
+    @CrossOrigin(origins = "http://localhost:4200")  // Enable CORS for the frontend
+    @PostMapping("/{restaurantId}/reviews/")
+    public ResponseEntity<Review> createReview(@RequestBody Review review, @PathVariable Long restaurantId, @RequestHeader("Authorization") String token) {
+        try {
+            System.out.println("Authorization Header: " + token);  // Add this line to debug
+
+            // Check if the token starts with "Bearer "
+            if (token == null || !token.startsWith("Bearer ")) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+            }
+
+            String jwtToken = token.substring(7);  // Remove "Bearer " prefix
+
+            // Validate the token using JwtService
+            if (!jwtService.isTokenValid(jwtToken)) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();  // Invalid token
+            }
+
+            // Extract the username from the JWT token
+            String username = jwtService.extractUsername(jwtToken);
+            if (username == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();  // Token username extraction failed
+            }
+
+            Optional<User> authenticatedUser = Optional.ofNullable(userRepository.findByUsername(username));
+            if (authenticatedUser.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();  // User not found
+            }
+
+            // Associate the authenticated user with the review
+            review.setUser(authenticatedUser.get());
+
+            // Find the restaurant by ID and associate it with the review
+            review.setRestaurant(restaurantRepository.findById(restaurantId).orElseThrow(() -> new RuntimeException("Restaurant not found")));
+
+            // Save the review
+            Review savedReview = reviewRepository.save(review);
+
+            return ResponseEntity.status(HttpStatus.CREATED).body(savedReview);
+        } catch (Exception e) {
+            System.out.println("Error creating review: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    // get reviews
+    @GetMapping("/{restaurantId}/reviews")
+    public ResponseEntity<List<Review>> getReviewsForRestaurant(@PathVariable Long restaurantId) {
+        Optional<Restaurant> restaurant = restaurantRepository.findById(restaurantId);
+        if (restaurant.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        }
+
+        List<Review> reviews = reviewRepository.findByRestaurantId(restaurantId);
+        return ResponseEntity.ok(reviews);
+    }
+
+
 
     // ResponseMessage class:
     public class ResponseMessage {

@@ -4,6 +4,7 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
@@ -79,20 +80,30 @@ public class JwtService {
         }
     }
 
+
     public String extractUsername(String token) {
         try {
-            // Extract claims
             Claims claims = Jwts.parser()
-                    .setSigningKey(secretKey) // Replace with your secret key
+                    .setSigningKey(secretKey)
                     .parseClaimsJws(token)
                     .getBody();
-            return claims.getSubject(); // Usually the username
+            String username = claims.getSubject();  // Should be the username from the token
+            System.out.println("Extracted Username: " + username);
+            return username;
         } catch (Exception e) {
             System.out.println("Error extracting username: " + e.getMessage());
             return null;
         }
     }
 
+
+    public UsernamePasswordAuthenticationToken getAuthentication(String token) {
+        String username = extractUsername(token);
+        if (username != null) {
+            return new UsernamePasswordAuthenticationToken(username, null, null); // Authorities can be added if required
+        }
+        return null;
+    }
 
 }
 
