@@ -153,6 +153,13 @@ public class RestaurantController {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();  // User not found
             }
 
+            // Check if the user has already reviewed this restaurant
+            Long userId = authenticatedUser.get().getId();
+            boolean hasAlreadyReviewed = reviewRepository.existsByUserIdAndRestaurantId(userId, restaurantId);
+            if (hasAlreadyReviewed) {
+                return ResponseEntity.status(HttpStatus.CONFLICT).body(null);  // User has already reviewed this restaurant
+            }
+
             // Associate the authenticated user with the review
             review.setUser(authenticatedUser.get());
 
@@ -180,6 +187,56 @@ public class RestaurantController {
         List<Review> reviews = reviewRepository.findByRestaurantId(restaurantId);
         return ResponseEntity.ok(reviews);
     }
+
+    // Endpoint to update a review
+    @PutMapping("/{restaurantId}/reviews/{reviewId}")
+    public ResponseEntity<Review> updateReview(@PathVariable Long restaurantId,
+                                               @PathVariable Long reviewId,
+                                               @RequestBody Review updatedReview,
+                                               @RequestHeader("Authorization") String token) {
+        try {
+            // Validate the token
+            if (token == null || !token.startsWith("Bearer ")) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+            }
+
+            String jwtToken = token.substring(7);  // Remove "Bearer " prefix
+            if (!jwtService.isTokenValid(jwtToken)) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+            }
+
+            // Extract username from JWT token
+            String username = jwtService.extractUsername(jwtToken);
+            if (username == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+            }
+
+            Optional<User> authenticatedUser = Optional.ofNullable(userRepository.findByUsername(username));
+            if (authenticatedUser.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+            }
+
+            Long userId = authenticatedUser.get().getId();
+
+            // Check if the review exists and belongs to the current user
+            Optional<Review> review = reviewRepository.findById(reviewId);
+            if (review.isEmpty() || !review.get().getUser().getId().equals(userId)) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).build();  // User is not the owner of the review
+            }
+
+            // Update the review
+            Review existingReview = review.get();
+            existingReview.setRating(updatedReview.getRating());
+            existingReview.setComment(updatedReview.getComment());
+            reviewRepository.save(existingReview);
+
+            return ResponseEntity.ok(existingReview);
+
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
 
 
 
