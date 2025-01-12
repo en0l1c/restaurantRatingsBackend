@@ -123,6 +123,20 @@ public class RestaurantController {
         }
     }
 
+    @CrossOrigin(origins = "http://localhost:4200")
+    @GetMapping("/search")
+    public ResponseEntity<List<Restaurant>> searchRestaurants(@RequestParam("q") String query) {
+        try {
+            List<Restaurant> restaurants = restaurantRepository.findByNameContainingIgnoreCase(query);
+            return ResponseEntity.ok(restaurants);
+        } catch (Exception e) {
+            // Log the error
+            System.err.println("Error during restaurant search: " + e.getMessage());
+            // Return an appropriate error response
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
+        }
+    }
+
     // post a new review
     @CrossOrigin(origins = "http://localhost:4200")  // Enable CORS for the frontend
     @PostMapping("/{restaurantId}/reviews/")
