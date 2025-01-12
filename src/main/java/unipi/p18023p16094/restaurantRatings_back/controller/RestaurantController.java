@@ -101,25 +101,25 @@ public class RestaurantController {
 
 
     // Endpoint for creating a restaurant
-    @CrossOrigin(origins = "http://localhost:4200")
     @PostMapping("/create")
     public ResponseEntity<?> create(@RequestBody Restaurant restaurant) {
-        System.out.println("Restaurant creation request received: " + restaurant);
+        System.out.println("Received restaurant: " + restaurant.toString()); // Print the entire restaurant object
 
-
-        // Check if the restaurant already exists by name
         if (restaurantDetailsService.existsByName(restaurant.getName())) {
+            System.out.println("Restaurant with name " + restaurant.getName() + " already exists.");
             return ResponseEntity.badRequest().body("Restaurant with the same name already exists");
         }
 
         try {
-            // Save the new restaurant to the database
-            restaurantRepository.save(restaurant);
-            System.out.println("Restaurant created successfully");
+            Restaurant savedRestaurant = restaurantRepository.save(restaurant);
+            System.out.println("Saved restaurant: " + savedRestaurant.toString());
+
             return ResponseEntity.ok(new ResponseMessage("Restaurant created successfully"));
         } catch (Exception e) {
-            // Handle any errors during restaurant creation
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error while creating restaurant: " + e.getMessage());
+            System.err.println("Error creating restaurant: " + e.getMessage());
+            e.printStackTrace(); // Print the full stack trace for detailed debugging
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Error while creating restaurant: " + e.getMessage());
         }
     }
 
@@ -231,6 +231,52 @@ public class RestaurantController {
             reviewRepository.save(existingReview);
 
             return ResponseEntity.ok(existingReview);
+
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    // Endpoint to delete a review
+    @DeleteMapping("/{restaurandId}/reviews/{reviewId}")
+    public ResponseEntity<Void> deleteReview(@PathVariable Long reviewId, @RequestHeader("Authorization") String token) {
+        try {
+            // Validate the token
+            if (token == null || !token.startsWith("Bearer ")) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+            }
+
+            String jwtToken = token.substring(7);  // Remove "Bearer " prefix
+            if (!jwtService.isTokenValid(jwtToken)) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+            }
+
+            // Extract username from JWT token
+            String username = jwtService.extractUsername(jwtToken);
+            if (username == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+            }
+
+            Optional<User> authenticatedUser = Optional.ofNullable(userRepository.findByUsername(username));
+            if (authenticatedUser.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+            }
+
+            Long userId = authenticatedUser.get().getId();
+
+            // Check if the review exists and belongs to the current user
+            Optional<Review> review = reviewRepository.findById(reviewId);
+            if (review.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+            }
+
+            if (!review.get().getUser().getId().equals(userId)) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).build();  // User is not the owner of the review
+            }
+
+            // Delete the review
+            reviewRepository.deleteById(reviewId);
+            return ResponseEntity.noContent().build();
 
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
