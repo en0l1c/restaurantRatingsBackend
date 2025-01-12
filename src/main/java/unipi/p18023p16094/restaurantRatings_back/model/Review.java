@@ -27,6 +27,17 @@ public class Review {
     @Column(name = "rating")
     private float rating;
 
+    private boolean hidden = false; // Add hidden field
+
+    // Getters and setters
+
+    public boolean isHidden() {
+        return hidden;
+    }
+
+    public void setHidden(boolean hidden) {
+        this.hidden = hidden;
+    }
 
 
     // Getters και Setters
