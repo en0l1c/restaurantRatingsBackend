@@ -68,6 +68,8 @@ The backend will run at **[http://localhost:8080](http://localhost:8080)**
 - [ ] **Enhance security** by refining JWT handling and permissions.
 - [ ] **Add integration tests** to verify API functionality.
 - [ ] **Optimize database queries** to improve performance.
+- [ ] **Improve user login/register to validate crucial info as It happens universally. For now It's only a prototype.
+- [ ] **Use validation in entities/dtos (@NotNull, @NotBlank, @JsonProperty) to validate all the crucial info
 
 ## Front End Repo
 ![Frontend Repository](https://github.com/en0l1c/restaurantRatingsFrontend)
